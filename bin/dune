@@ -1,0 +1,4 @@
+(executable
+ (public_name tiger_ocaml)
+ (name main)
+ (libraries tiger_ocaml))

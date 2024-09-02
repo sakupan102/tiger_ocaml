@@ -1,0 +1,7 @@
+(library
+ (name tiger_ocaml))
+
+(env
+ (dev
+  (flags
+   (:standard -warn-error -69-27-8-9))))
