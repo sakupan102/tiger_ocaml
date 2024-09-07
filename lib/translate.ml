@@ -75,6 +75,14 @@ module Make = struct
     in
     static_link_path (Tree.TEMP Frame.fp) level
 
+  let subscript_var (var, index) =
+    Ex
+      (Tree.MEM
+         (Tree.BINOP
+            ( Tree.PLUS,
+              var,
+              Tree.BINOP (Tree.MUL, index, Tree.CONST Frame.wordsize) )))
+
   let outermost : level =
     {
       prev = None;
