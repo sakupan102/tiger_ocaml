@@ -16,12 +16,10 @@ end
 module Make = struct
   type level = { prev : level option; frame : Frame.frame; uniq : unit ref }
   type access = level * Frame.access
-  type exp = unit
 
   exception TranslateError of (Tiger.pos option * string) list
 
-  type exp_impl =
-    (*実装後expに変換*)
+  type exp =
     | Ex of Tree.exp
     | Nx of Tree.stm
     | Cx of (Temp.label * Temp.label -> Tree.stm)
