@@ -35,13 +35,8 @@ and binop =
 
 and relop = EQ | NE | LT | GT | LE | GE | ULT | ULE | UGT | UGE
 
-let seq (lst : stm list) : stm =
-  let rec build_seq = function
-    | [] -> failwith "Can't build sequence from nothing"
-    | [ item ] -> item
-    | [ i1; i2 ] -> SEQ (i1, i2)
-    | hd :: tl ->
-        let bot = build_seq tl in
-        SEQ (hd, bot)
-  in
-  build_seq lst
+let req seq (stms : stm list) =
+  match stms with
+  | [] -> failwith "Can't build sequence from nothing"
+  | stm :: [] -> stm
+  | stm :: stms -> SEQ (stm, seq stms)
