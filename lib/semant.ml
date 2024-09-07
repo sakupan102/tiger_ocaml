@@ -36,15 +36,24 @@ let rec trans_exp
     (((venv, tenv) : venv * tenv), (level : Translate.level), (exp : Absyn.exp))
     : expty =
   let rec trexp = function
-    | Absyn.NilExp -> { exp = (); ty = Types.Nil }
-    | Absyn.IntExp _ -> { exp = (); ty = Types.Int }
-    | Absyn.OpExp (left, _, right, pos) ->
-        let { exp = _; ty = left_type } = trexp left
-        and { exp = _; ty = right_type } = trexp right in
-        check_int (left_type, pos);
-        check_int (right_type, pos);
-        { exp = (); ty = Types.Int }
-    | Absyn.StringExp (_, _) -> { exp = (); ty = Types.String }
+    | Absyn.NilExp _ -> { exp = Translate.nil_exp (); ty = Types.Nil }
+    | Absyn.IntExp (num, _) -> { exp = Translate.int_exp num; ty = Types.Int }
+    | Absyn.OpExp (left, op, right, pos) -> (
+        let { exp = left_exp; ty = left_type } = trexp left
+        and { exp = right_exp; ty = right_type } = trexp right in
+        match op with
+        | Absyn.PlusOp | Absyn.MinusOp | Absyn.TimesOp | Absyn.DivideOp ->
+            check_int (left_type, pos);
+            check_int (right_type, pos);
+            {
+              exp = Translate.arithExp (left_exp, op, right_exp);
+              ty = Types.Int;
+            }
+        | Absyn.EqOp | Absyn.NeqOp | Absyn.LtOp | Absyn.LeOp | Absyn.GtOp | GeOp
+          ->
+            { exp = Translate.nil_exp (); ty = Types.Nil })
+    | Absyn.StringExp (str, _) ->
+        { exp = Translate.string_exp str; ty = Types.String }
     | Absyn.CallExp (name, params, pos) -> (
         let check_param (formal : Types.ty) (param : Absyn.exp) =
           let { ty = param_type; exp = _ } = trexp param in
