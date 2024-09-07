@@ -142,6 +142,21 @@ and trans_ty ((tenv, ty) : tenv * Absyn.ty) : Types.ty =
   | Absyn.RecordTy (fields, _) ->
       Types.Record (trans_param (tenv, fields), ref ())
 
+and trans_var
+    (((venv, tenv) : venv * tenv), (level : Translate.level), (var : Absyn.var))
+    : expty =
+  match var with
+  | Absyn.SimpleVar (sym, pos) -> (
+      match Symbol.look (venv, sym) with
+      | None -> raise @@ SemantError [ (Some pos, "variable does not defined") ]
+      | Some (Env.VarEntry { access; ty; pos }) ->
+          { exp = Translate.simple_var (access, level); ty = Types.Nil }
+      | _ -> raise @@ SemantError [ (Some pos, "variable does not defined") ])
+  | Absyn.SubscriptVar (var, exp, pos) ->
+      let { exp = index } = trans_exp ((venv, tenv), level, exp)
+      and { exp = var } = trans_var ((venv, tenv), level, var) in
+      { exp = Translate.subscript_var (var, index); ty = Types.Nil }
+
 and set_type_content (tenv : tenv)
     ((symbol, ty, pos) : Symbol.symbol * Absyn.ty * Tiger.pos) =
   let typ = trans_ty (tenv, ty) in
