@@ -42,7 +42,24 @@ module Make = struct
             Tree.TEMP result )
     | Nx exp -> Tree.ESEQ (exp, Tree.CONST 0)
 
-  let simple_var (((var_level, access), level) : access * level) : exp_impl =
+  let int_exp (num : int) = Ex (Tree.CONST num)
+  let nil_exp () = Ex (Tree.CONST 0)
+
+  let string_exp (str : string) =
+    let new_label = Temp.new_label () in
+    (* TODO: 文字列を配置するFrame.Strigを実装する *)
+    Ex (Tree.NAME new_label)
+
+  let arithExp (left_exp, op, right_exp) =
+    match op with
+    | Absyn.PlusOp -> Ex (Tree.BINOP (Tree.PLUS, unEx left_exp, unEx right_exp))
+    | Absyn.MinusOp ->
+        Ex (Tree.BINOP (Tree.MINUS, unEx left_exp, unEx right_exp))
+    | Absyn.TimesOp -> Ex (Tree.BINOP (Tree.MUL, unEx left_exp, unEx right_exp))
+    | Absyn.DivideOp ->
+        Ex (Tree.BINOP (Tree.DIV, unEx left_exp, unEx right_exp))
+
+  let simple_var (((var_level, access), level) : access * level) : exp =
     let rec static_link_path frame_pointer_pos level =
       if var_level.uniq == level.uniq then
         Ex (Frame.exp access frame_pointer_pos)
