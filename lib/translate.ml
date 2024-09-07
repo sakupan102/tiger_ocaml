@@ -80,8 +80,8 @@ module Make = struct
       (Tree.MEM
          (Tree.BINOP
             ( Tree.PLUS,
-              var,
-              Tree.BINOP (Tree.MUL, index, Tree.CONST Frame.wordsize) )))
+              unEx var,
+              Tree.BINOP (Tree.MUL, unEx index, Tree.CONST Frame.wordsize) )))
 
   let outermost : level =
     {
