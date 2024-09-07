@@ -50,8 +50,16 @@ let rec trans_exp
               ty = Types.Int;
             }
         | Absyn.EqOp | Absyn.NeqOp | Absyn.LtOp | Absyn.LeOp | Absyn.GtOp | GeOp
-          ->
-            { exp = Translate.nil_exp (); ty = Types.Nil })
+          -> (
+            match left_type with
+            | Types.Int ->
+                check_int (left_type, pos);
+                check_int (right_type, pos);
+                {
+                  exp = Translate.compare_exp (left_exp, op, right_exp);
+                  ty = Types.Nil;
+                })
+        (*TODO: 文字列の比較も実装する*))
     | Absyn.StringExp (str, _) ->
         { exp = Translate.string_exp str; ty = Types.String }
     | Absyn.CallExp (name, params, pos) -> (

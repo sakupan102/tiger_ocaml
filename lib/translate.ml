@@ -59,6 +59,21 @@ module Make = struct
     | Absyn.DivideOp ->
         Ex (Tree.BINOP (Tree.DIV, unEx left_exp, unEx right_exp))
 
+  let compare_exp (left_exp, op, right_exp) =
+    let convert_op (op : Absyn.oper) : Tree.relop =
+      match op with
+      | Absyn.EqOp -> Tree.EQ
+      | Absyn.NeqOp -> Tree.NE
+      | Absyn.GeOp -> Tree.GE
+      | Absyn.GtOp -> Tree.GT
+      | Absyn.LeOp -> Tree.LE
+      | Absyn.LtOp -> Tree.LT
+    in
+    Cx
+      (fun (true_label, false_label) ->
+        Tree.CJUMP
+          (convert_op op, unEx left_exp, unEx right_exp, true_label, false_label))
+
   let simple_var (((var_level, access), level) : access * level) : exp =
     let rec static_link_path frame_pointer_pos level =
       if var_level.uniq == level.uniq then
