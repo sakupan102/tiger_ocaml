@@ -3,13 +3,13 @@ and symbol = Symbol.symbol
 
 type var =
   | SimpleVar of symbol * pos
-  | FieldVar of var * symbol * pos * pos
+  | FieldVar of var * symbol * pos
   | SubscriptVar of var * exp * pos
 
 and exp =
-  | VarExp of var
-  | NilExp
-  | IntExp of int
+  | VarExp of var * pos
+  | NilExp of pos
+  | IntExp of int * pos
   | StringExp of string * pos (* func    params *)
   | CallExp of symbol * exp list * pos (* left    op     right *)
   | OpExp of exp * oper * exp * pos (* fields               type *)
