@@ -50,7 +50,7 @@ module Make = struct
     (* TODO: 文字列を配置するFrame.Strigを実装する *)
     Ex (Tree.NAME new_label)
 
-  let arithExp (left_exp, op, right_exp) =
+  let arith_exp (left_exp, op, right_exp) =
     match op with
     | Absyn.PlusOp -> Ex (Tree.BINOP (Tree.PLUS, unEx left_exp, unEx right_exp))
     | Absyn.MinusOp ->

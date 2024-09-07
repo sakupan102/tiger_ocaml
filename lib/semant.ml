@@ -46,7 +46,7 @@ let rec trans_exp
             check_int (left_type, pos);
             check_int (right_type, pos);
             {
-              exp = Translate.arithExp (left_exp, op, right_exp);
+              exp = Translate.arith_exp (left_exp, op, right_exp);
               ty = Types.Int;
             }
         | Absyn.EqOp | Absyn.NeqOp | Absyn.LtOp | Absyn.LeOp | Absyn.GtOp | GeOp
