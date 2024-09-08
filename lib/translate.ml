@@ -42,6 +42,17 @@ module Make = struct
             Tree.TEMP result )
     | Nx exp -> Tree.ESEQ (exp, Tree.CONST 0)
 
+  let unCx = function
+    | Cx genstm -> genstm
+    | Ex exp ->
+        fun (true_label, false_label) ->
+          Tree.CJUMP (Tree.EQ, exp, Tree.CONST 0, true_label, false_label)
+    | Nx _ ->
+        failwith
+          "Impossible condition in unCx. Should not happen in well typed \
+           programs."
+
+  let unNx = function Nx stm -> stm | Ex exp -> Tree.EXP exp
   let int_exp (num : int) = Ex (Tree.CONST num)
   let nil_exp () = Ex (Tree.CONST 0)
 
