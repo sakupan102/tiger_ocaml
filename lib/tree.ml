@@ -35,7 +35,7 @@ and binop =
 
 and relop = EQ | NE | LT | GT | LE | GE | ULT | ULE | UGT | UGE
 
-let req seq (stms : stm list) =
+let rec seq (stms : stm list) =
   match stms with
   | [] -> failwith "Can't build sequence from nothing"
   | stm :: [] -> stm
