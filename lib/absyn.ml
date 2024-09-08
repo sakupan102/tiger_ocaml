@@ -16,9 +16,9 @@ and exp =
   | RecordExp of ((symbol * exp) list * symbol * pos)
   | SeqExp of exp list
   | AssignExp of (var * exp)
+  | IfExp of exp * exp * exp option * pos
+  | WhileExp of (exp * exp * pos)
 (*
-           | IfExp of ('a exp * 'a exp * 'a exp option) * 'a
-           | WhileExp of ('a exp * 'a exp) * 'a
                        (* var    escape      lo       hi       body *)
            | ForExp of (symbol * bool ref * 'a exp * 'a exp * 'a exp) * 'a
            | BreakExp of unit * 'a

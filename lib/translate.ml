@@ -85,6 +85,38 @@ module Make = struct
         Tree.CJUMP
           (convert_op op, unEx left_exp, unEx right_exp, true_label, false_label))
 
+  let if_exp (cond, then_exp, else_exp) =
+    let true_label = Temp.new_label ()
+    and false_label = Temp.new_label ()
+    and result_label = Temp.new_label ()
+    and result_temp = Temp.newTemp () in
+    Ex
+      (Tree.ESEQ
+         ( Tree.seq
+             [
+               unCx cond (true_label, false_label);
+               Tree.LABEL true_label;
+               Tree.MOVE (Tree.TEMP result_temp, unEx then_exp);
+               Tree.JUMP (Tree.NAME result_label, [ result_label ]);
+               Tree.LABEL false_label;
+               Tree.MOVE (Tree.TEMP result_temp, unEx else_exp);
+               Tree.JUMP (Tree.NAME result_label, [ result_label ]);
+               Tree.LABEL result_label;
+             ],
+           Tree.TEMP result_temp ))
+
+  let while_exp ((cond, body) : exp * exp) : exp =
+    let body_label = Temp.new_label () and done_label = Temp.new_label () in
+    Nx
+      (Tree.seq
+         [
+           Tree.CJUMP (Tree.NE, unEx cond, Tree.CONST 0, body_label, done_label);
+           Tree.LABEL body_label;
+           unNx body;
+           Tree.CJUMP (Tree.NE, unEx cond, Tree.CONST 0, body_label, done_label);
+           Tree.LABEL done_label;
+         ])
+
   let simple_var (((var_level, access), level) : access * level) : exp =
     let rec static_link_path frame_pointer_pos level =
       if var_level.uniq == level.uniq then

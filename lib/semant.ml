@@ -102,6 +102,22 @@ let rec trans_exp
     | Absyn.SeqExp exps ->
         let exp_results = List.map trexp exps in
         List.nth exp_results (List.length exp_results - 1)
+    | Absyn.IfExp (cond, then_exp, Some else_exp, pos) ->
+        let { exp = translated_cond; ty = result_ty } = trexp cond
+        and { exp = translated_then; ty = true_ty } = trexp then_exp
+        and { exp = translated_else; ty = false_ty } = trexp else_exp in
+        check_int (result_ty, pos);
+        is_expected_type ((true_ty, pos), false_ty);
+        {
+          exp =
+            Translate.if_exp (translated_cond, translated_then, translated_else);
+          ty = false_ty;
+        }
+    | Absyn.WhileExp (cond, body, pos) ->
+        let { exp = cond_exp; ty = cond_ty } = trexp cond
+        and { exp = body_exp; ty = _ } = trexp body in
+        check_int (cond_ty, pos);
+        { exp = Translate.while_exp (cond_exp, body_exp); ty = Types.Nil }
     | _ -> { exp = (); ty = Types.Nil }
   in
   trexp exp
