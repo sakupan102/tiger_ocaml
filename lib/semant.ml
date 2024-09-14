@@ -211,8 +211,9 @@ and trans_fun ((venv, tenv) : venv * tenv)
           venv
           (List.combine params var_access)
       in
-      let exp = trans_exp ((venv', tenv), level, body) in
-      is_expected_type ((result, pos), exp.ty)
+      let { exp = body; ty = typ } = trans_exp ((venv', tenv), level, body) in
+      is_expected_type ((result, pos), typ);
+      Translate.proc_entry_exit (level, body)
   | _ -> raise @@ SemantError [ (Some pos, "function does not found") ]
 
 and set_function_header

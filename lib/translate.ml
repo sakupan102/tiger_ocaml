@@ -58,6 +58,12 @@ module Make = struct
   let int_exp (num : int) = Ex (Tree.CONST num)
   let nil_exp () = Ex (Tree.CONST 0)
 
+  let proc_entry_exit ((level : level), (body : exp)) : unit =
+    let attatched_body = Frame.proc_entry_exit1 (level.frame, body) in
+    frag_list :=
+      Frame.PROC { body = unNx attatched_body; frame = level.frame }
+      :: !frag_list
+
   let string_exp (str : string) =
     let new_label = Temp.new_label () in
     frag_list := Frame.STRING (new_label, str) :: !frag_list;
