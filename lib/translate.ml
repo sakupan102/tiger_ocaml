@@ -13,6 +13,8 @@ module type T = sig
   val simple_var : access * level -> exp
 end
 
+let frag_list : Frame.frag list ref = ref []
+
 module Make = struct
   type level = { prev : level option; frame : Frame.frame; uniq : unit ref }
   type access = level * Frame.access
