@@ -23,6 +23,10 @@ type frame = {
   local_offset : int ref;
 }
 
+type frag =
+  | PROC of { body : Tree.stm; frame : frame }
+  | STRING of Temp.label * string
+
 let exp (access : access) (Tree.TEMP frame_pointer) =
   match access with
   | InFrame offset ->

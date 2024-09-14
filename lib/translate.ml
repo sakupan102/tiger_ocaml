@@ -58,7 +58,7 @@ module Make = struct
 
   let string_exp (str : string) =
     let new_label = Temp.new_label () in
-    (* TODO: 文字列を配置するFrame.Strigを実装する *)
+    frag_list := Frame.STRING (new_label, str) :: !frag_list;
     Ex (Tree.NAME new_label)
 
   let arith_exp (left_exp, op, right_exp) =
