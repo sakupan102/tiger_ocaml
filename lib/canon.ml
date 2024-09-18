@@ -66,3 +66,33 @@ let linearize (stm0 : T.stm) : T.stm list =
     | _ -> [ stm0 ]
   in
   linear (do_stm stm0)
+
+type block = T.stm list
+
+let basic_blocks stms =
+  let finish = Temp.new_label () in
+  let rec split_blocks (stms : T.stm list) (blocks : T.stm list list) =
+    match stms with
+    | [] -> blocks
+    | _ ->
+        let rec next (current_stms : T.stm list) (current_block : T.stm list) =
+          match current_stms with
+          | (T.JUMP _ as t) :: rest -> end_block rest (t :: current_block)
+          | (T.CJUMP _ as t) :: rest -> end_block rest (t :: current_block)
+          | T.LABEL label :: _ as li ->
+              end_block li (T.JUMP (T.NAME label, [ label ]) :: current_block)
+          | s :: rest -> next rest (s :: current_block)
+          | [] ->
+              end_block [] (T.JUMP (T.NAME finish, [ finish ]) :: current_block)
+        and end_block (current_stms : T.stm list) (current_block : T.stm list) =
+          match current_stms with
+          | T.LABEL _ :: _ ->
+              split_blocks current_stms (List.rev current_block :: blocks)
+          | _ ->
+              split_blocks
+                (T.LABEL (Temp.new_label ()) :: current_stms)
+                (List.rev current_block :: blocks)
+        in
+        next stms []
+  in
+  (split_blocks stms [], finish)
