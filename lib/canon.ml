@@ -96,3 +96,42 @@ let basic_blocks stms =
         next stms []
   in
   (split_blocks stms [], finish)
+
+let enter_block table block =
+  match block with
+  | T.LABEL label :: _ as block -> Symbol.enter (table, label, block)
+  | _ -> table
+
+let rec split_last = function
+  | [ last ] -> ([], last)
+  | head :: rest ->
+      let heads, last = split_last rest in
+      (head :: heads, last)
+
+let rec trace
+    ( (label_to_block : T.stm list Symbol.table),
+      (T.LABEL label :: _ as current_block),
+      rest_blocks ) =
+  let label_to_block = Symbol.enter (label_to_block, label, []) in
+  match split_last current_block with
+  | _, T.JUMP (T.NAME next_label, _) -> (
+      match Symbol.look (label_to_block, next_label) with
+      (*組み込まれていないブロックがあればそれをトレースに追加*)
+      | Some next_block ->
+          current_block @ trace (label_to_block, next_block, rest_blocks)
+      (*どこにも遷移先がない時は新たにトレースを開始*)
+      | _ -> current_block @ next_trace label_to_block rest_blocks)
+
+and next_trace (label_to_block : T.stm list Symbol.table)
+    (blocks : T.stm list list) =
+  match blocks with
+  | (T.LABEL label :: _) :: rest -> (
+      match Symbol.look (label_to_block, label) with
+      (*すでにトレースに組み込まれているブロックは無視*)
+      | None -> next_trace label_to_block rest
+      (*組み込まれていないブロックがあればそこからトレースを開始*)
+      | Some block -> trace (label_to_block, block, rest))
+
+let trace_schedule ((blocks : T.stm list list), finish) =
+  let label_to_block = List.fold_left enter_block Symbol.empty blocks in
+  next_trace label_to_block blocks @ [ T.LABEL finish ]
