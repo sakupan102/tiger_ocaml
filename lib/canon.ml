@@ -122,16 +122,39 @@ let rec trace
           body @ trace (label_to_block, next_block, rest_blocks)
       (*どこにも遷移先がない時は新たにトレースを開始*)
       | _ -> current_block @ next_trace label_to_block rest_blocks)
+  | body, T.CJUMP (op, left_exp, right_exp, true_label, false_label) -> (
+      match
+        ( Symbol.look (label_to_block, true_label),
+          Symbol.look (label_to_block, false_label) )
+      with
+      | _, Some (_ :: _ as next_block) ->
+          body @ trace (label_to_block, next_block, rest_blocks)
+      | Some (_ :: _ as next_block), _ ->
+          body
+          @ [ T.CJUMP (op, left_exp, right_exp, false_label, true_label) ]
+          @ trace (label_to_block, next_block, rest_blocks)
+      | _ ->
+          let new_false_label = Temp.new_label () in
+          body
+          @ [
+              T.CJUMP (op, left_exp, right_exp, new_false_label, true_label);
+              T.LABEL new_false_label;
+              T.JUMP (T.NAME new_false_label, [ new_false_label ]);
+            ]
+          @ next_trace label_to_block rest_blocks)
+  | _ -> current_block @ next_trace label_to_block rest_blocks
 
 and next_trace (label_to_block : T.stm list Symbol.table)
     (blocks : T.stm list list) =
   match blocks with
   | (T.LABEL label :: _) :: rest -> (
       match Symbol.look (label_to_block, label) with
-      (*すでにトレースに組み込まれているブロックは無視*)
-      | None -> next_trace label_to_block rest
       (*組み込まれていないブロックがあればそこからトレースを開始*)
-      | Some block -> trace (label_to_block, block, rest))
+      | Some (_ :: _ as block) ->
+          trace (label_to_block, block, rest) (*すでにトレースに組み込まれているブロックは無視*)
+      | _ -> next_trace label_to_block rest)
+  | [] -> []
+  | _ -> next_trace label_to_block blocks
 
 let trace_schedule ((blocks : T.stm list list), finish) =
   let label_to_block = List.fold_left enter_block Symbol.empty blocks in
