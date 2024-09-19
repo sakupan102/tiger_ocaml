@@ -114,11 +114,12 @@ let rec trace
       rest_blocks ) =
   let label_to_block = Symbol.enter (label_to_block, label, []) in
   match split_last current_block with
-  | _, T.JUMP (T.NAME next_label, _) -> (
+  | body, T.JUMP (T.NAME next_label, _) -> (
       match Symbol.look (label_to_block, next_label) with
       (*組み込まれていないブロックがあればそれをトレースに追加*)
-      | Some next_block ->
-          current_block @ trace (label_to_block, next_block, rest_blocks)
+      (*JUMPの次に遷移先のラベルがあるのでJUMPは省略*)
+      | Some (_ :: _ as next_block) ->
+          body @ trace (label_to_block, next_block, rest_blocks)
       (*どこにも遷移先がない時は新たにトレースを開始*)
       | _ -> current_block @ next_trace label_to_block rest_blocks)
 
