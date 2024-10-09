@@ -20,5 +20,7 @@ let increment_label x =
   x := value + 1;
   value
 
-let new_label () =
+let new_label () : label =
   Symbol.symbol (Printf.sprintf "L%d" (increment_label num_for_label))
+
+let named_label name : label = Symbol.symbol name
