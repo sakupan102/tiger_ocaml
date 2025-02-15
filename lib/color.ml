@@ -109,19 +109,18 @@ module Color : Color = struct
           NodeTable.enter (temp_to_degree, node, num_adj_nodes))
         (Graph.nodes interference.graph)
     in
-    let build () = set_degree () in
     let make_work_list () =
       let initial_nodes = Graph.nodes interference.graph in
       List.iter
         (fun (node : Graph.node) ->
           if NodeTable.look_exn temp_to_degree node >= Frame.num_registers then
-            failwith "spilling is not supported"
-            (* spill_worklist := Nodes.add node !spill_worklist *)
-            (*
+            ()
+          (* spill_worklist := Nodes.add node !spill_worklist *)
+          (*
           else if is_move_related_node node then
             freeze_worklist := Nodes.add node !freeze_worklist
           *)
-          else simplify_worklist := Nodes.add node !simplify_worklist)
+            else simplify_worklist := Nodes.add node !simplify_worklist)
         initial_nodes
     in
     let decrement_degree (node : Graph.node) =
@@ -138,7 +137,7 @@ module Color : Color = struct
       Nodes.iter decrement_degree (adjacent_nodes node)
     in
     let assign_color () =
-      while Stack.is_empty select_stack do
+      while not (Stack.is_empty select_stack) do
         let n = Stack.pop select_stack
         and ok_colors = ref (Registers.of_list Frame.registers) in
         List.iter
@@ -158,9 +157,9 @@ module Color : Color = struct
           (temp_to_register, interference.node_to_temp n, selected_color)
       done
     in
-    build ();
+    set_degree ();
     make_work_list ();
-    while Nodes.is_empty !simplify_worklist do
+    while not (Nodes.is_empty !simplify_worklist) do
       if not (Nodes.is_empty !simplify_worklist) then simplify ()
         (*
       else if not NodePairs.is_empty worklist_moves then coalesce() 
