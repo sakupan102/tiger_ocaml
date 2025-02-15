@@ -4,7 +4,7 @@ let temps = ref 100
 
 let newTemp () =
   let t = !temps in
-  temps := 1 + 1;
+  temps := t + 1;
   t
 
 type label = Symbol.symbol
