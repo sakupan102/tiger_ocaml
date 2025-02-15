@@ -40,6 +40,11 @@ let test_interference_graph : Graph.graph =
     };
   Graph.make_edge
     {
+      from = Graph.augment test_interference_graph 0;
+      to_ = Graph.augment test_interference_graph 2;
+    };
+  Graph.make_edge
+    {
       from = augment test_interference_graph 1;
       to_ = augment test_interference_graph 0;
     };
@@ -65,6 +70,11 @@ let test_interference_graph : Graph.graph =
     };
   Graph.make_edge
     {
+      from = augment test_interference_graph 2;
+      to_ = augment test_interference_graph 8;
+    };
+  Graph.make_edge
+    {
       from = augment test_interference_graph 3;
       to_ = augment test_interference_graph 4;
     };
@@ -77,11 +87,6 @@ let test_interference_graph : Graph.graph =
     {
       from = augment test_interference_graph 3;
       to_ = augment test_interference_graph 0;
-    };
-  Graph.make_edge
-    {
-      from = augment test_interference_graph 3;
-      to_ = augment test_interference_graph 4;
     };
   Graph.make_edge
     {
@@ -112,6 +117,11 @@ let test_interference_graph : Graph.graph =
     {
       from = augment test_interference_graph 5;
       to_ = augment test_interference_graph 7;
+    };
+  Graph.make_edge
+    {
+      from = augment test_interference_graph 5;
+      to_ = augment test_interference_graph 6;
     };
   Graph.make_edge
     {
@@ -147,6 +157,11 @@ let test_interference_graph : Graph.graph =
     {
       from = augment test_interference_graph 7;
       to_ = augment test_interference_graph 5;
+    };
+  Graph.make_edge
+    {
+      from = augment test_interference_graph 7;
+      to_ = augment test_interference_graph 3;
     };
   Graph.make_edge
     {
@@ -244,6 +259,26 @@ let temp_to_register, spilled_temps =
       registers;
     }
 
+let get_node_reg (node : Graph.node) =
+  let node_temp = Graph.ITable.look_exn node_to_temp node in
+  Temp.Table.look_exn temp_to_register node_temp
+
 let%test "color spill test" = spilled_temps = []
 
-
+(* coloring conflict test *)
+let () =
+  List.iter
+    (fun (node : Graph.node) ->
+      let _, idx = node in
+      let node_reg = get_node_reg node in
+      let adj_nodes = Graph.adj node in
+      List.iter
+        (fun (adj_node : Graph.node) ->
+          let adj_reg = get_node_reg adj_node in
+          let _, adj_idx = adj_node in
+          if node_reg == adj_reg then
+            print_string
+              (Printf.sprintf "confilct detected %d %d %s\n" idx adj_idx
+                 node_reg))
+        adj_nodes)
+    (Graph.nodes test_interference_graph)
