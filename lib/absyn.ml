@@ -17,13 +17,12 @@ and exp =
   | SeqExp of exp list
   | AssignExp of (var * exp)
   | IfExp of exp * exp * exp option * pos
-  | WhileExp of (exp * exp * pos)
+  | WhileExp of (exp * exp * pos) (* decs      body*)
+  | LetExp of dec list * exp list * pos
 (*
                        (* var    escape      lo       hi       body *)
            | ForExp of (symbol * bool ref * 'a exp * 'a exp * 'a exp) * 'a
            | BreakExp of unit * 'a
-                       (* decs      body*)
-           | LetExp of ('a dec list * 'a exp list) * 'a
                          (* type    size      init *)
            | ArrayExp of (symbol * 'a exp * 'a exp) * 'a
 *)
