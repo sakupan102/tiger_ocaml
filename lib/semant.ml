@@ -63,23 +63,26 @@ let rec trans_exp
     | Absyn.StringExp (str, _) ->
         { exp = Translate.string_exp str; ty = Types.String }
     | Absyn.CallExp (name, params, pos) -> (
-        let check_param (formal : Types.ty) (param : Absyn.exp) =
-          let { ty = param_type; exp = _ } = trexp param in
-          is_expected_type ((param_type, pos), formal)
+        let check_param (formal : Types.ty) (param : Absyn.exp) : Translate.exp
+            =
+          let { ty = param_type; exp } = trexp param in
+          is_expected_type ((param_type, pos), formal);
+          exp
         in
         match Symbol.look (venv, name) with
-        | Some (FunEntry { formals; result }) ->
+        (*
+        | Some (Env.FunEntry { formals; result; level }) ->
             if List.length formals != List.length params then
               raise
               @@ SemantError [ (Some pos, "number of argument does not match") ]
             else
-              for i = 0 to List.length formals do
-                check_param (List.nth formals i) (List.nth params i)
-              done;
-            { exp = (); ty = result }
+              let exps = List.map2 check_param formals params in
+              { exp = Translate.call_exp exps level.frame; ty = result }
+        *)
         | _ -> raise @@ SemantError [ (Some pos, "function does not defined") ])
     | Absyn.RecordExp (fields, typ, pos) -> (
         match Symbol.look (tenv, typ) with
+        (*
         | Some (Types.Record (pairs, num)) ->
             let check_property ((key, value), (expected_key, expected_value)) :
                 unit =
@@ -98,6 +101,7 @@ let rec trans_exp
                 check_property (List.nth fields i, List.nth pairs i)
               done;
             { exp = (); ty = Types.Record (pairs, num) }
+        *)
         | _ -> raise @@ SemantError [ (Some pos, "type does not defined") ])
     | Absyn.SeqExp exps ->
         let exp_results = List.map trexp exps in
@@ -118,19 +122,34 @@ let rec trans_exp
         and { exp = body_exp; ty = _ } = trexp body in
         check_int (cond_ty, pos);
         { exp = Translate.while_exp (cond_exp, body_exp); ty = Types.Nil }
-    | _ -> { exp = (); ty = Types.Nil }
+        (*
+    | Absyn.LetExp (decs, body, pos) ->
+        let venv', tenv' =
+          List.fold_right
+            (fun dec (venv, tenv) -> trans_dec ((venv, tenv), level, dec))
+            decs (venv, tenv)
+        in
+        trans_exp ((venv', tenv'), level, Absyn.SeqExp body)
+        *)
+    | _ -> raise @@ SemantError [ (None, "not implemented") ]
   in
   trexp exp
 
 and trans_dec
-    (((venv, tenv) : venv * tenv), (level : Translate.level), (decs : Absyn.dec))
-    : venv * tenv =
-  match decs with
+    (((venv, tenv) : venv * tenv), (level : Translate.level), (dec : Absyn.dec))
+    : venv * tenv * Translate.exp list =
+  match dec with
+  (*
   | Absyn.VarDec (name, None, init, pos) ->
-      let { ty; _ } = trans_exp ((venv, tenv), level, init) in
+      let { ty; exp } = trans_exp ((venv, tenv), level, init) in
       let var_access = Translate.alloc_local level true in
-      ( Symbol.enter (venv, name, Env.VarEntry { ty; pos; access = var_access }),
-        tenv )
+      let venv' =
+        Symbol.enter (venv, name, Env.VarEntry { ty; pos; access = var_access })
+      in
+      let { ty = _; exp = var_exp } = trans_var ((venv', tenv), level, dec) in
+      let result_exp = Translate.assign_exp (var_exp, exp) in
+      (venv', tenv, [ result_exp ])
+  *)
   | Absyn.VarDec (name, Some typ, init, pos) -> (
       let { ty; _ } = trans_exp ((venv, tenv), level, init) in
       match Symbol.look (tenv, typ) with
@@ -139,19 +158,20 @@ and trans_dec
           let var_access = Translate.alloc_local level true in
           ( Symbol.enter
               (venv, name, Env.VarEntry { ty; pos; access = var_access }),
-            tenv )
+            tenv,
+            [] )
       | None -> raise @@ SemantError [ (Some pos, "integer required") ])
   | Absyn.TypeDec typedecs ->
       let tenv' = List.fold_left set_type_header tenv typedecs in
       let tenv'' = List.fold_left set_type_content tenv' typedecs in
-      (venv, tenv'')
+      (venv, tenv'', [])
   | Absyn.FunctionDec function_decs ->
       let (venv', tenv), _ =
         List.fold_left set_function_header ((venv, tenv), level) function_decs
-        (* TODO: 関数内の型検査を実装する *)
       in
-      List.iter (trans_fun (venv, tenv)) function_decs;
-      (venv', tenv)
+      List.iter (trans_fun (venv', tenv)) function_decs;
+      (venv', tenv, [])
+  | _ -> raise @@ SemantError [ (None, "not implemented") ]
 
 and trans_ty ((tenv, ty) : tenv * Absyn.ty) : Types.ty =
   match ty with

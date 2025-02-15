@@ -10,6 +10,7 @@ module type Graph = sig
   val eq : node -> node -> bool
   val new_graph : unit -> graph
   val new_node : graph -> node
+  val show : graph -> unit
 
   module ITable : Table.ITable with type key := node
 
@@ -19,7 +20,7 @@ module type Graph = sig
   val remove_edge : nodes_connection -> unit
 end
 
-module Graph : Graph = struct
+module Graph = struct
   module D = Dynarray
 
   type node_index = int
@@ -74,15 +75,15 @@ module Graph : Graph = struct
 
   let numNodes g = List.length (nodes g)
 
-  let succ ((g : graph), i) =
+  let succ (((g : graph), i) : node) =
     let (NODE { succ = s; _ }) = D.get g i in
     List.map (augment g) (SI.elements s)
 
-  let pred ((g : graph), i) =
+  let pred (((g : graph), i) : node) =
     let (NODE { pred = p; _ }) = D.get g i in
     List.map (augment g) (SI.elements p)
 
-  let adj ((g : graph), i) =
+  let adj (((g : graph), i) : node) =
     let (NODE { succ = s; _ }) = D.get g i in
     let (NODE { pred = p; _ }) = D.get g i in
     List.map (augment g) (SI.elements (SI.union s p))

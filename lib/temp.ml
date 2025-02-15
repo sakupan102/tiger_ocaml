@@ -11,7 +11,12 @@ type label = Symbol.symbol
 
 let makestring t = "t" ^ string_of_int t
 
-module Table = Symbol.Table
+module Table : Table.ITable with type key := temp = Table.MakeITable (struct
+  type key = temp
+
+  let equal = ( = )
+  let hash = Hashtbl.hash
+end)
 
 let num_for_label = ref 0
 

@@ -59,10 +59,9 @@ module Make = struct
   let nil_exp () = Ex (Tree.CONST 0)
 
   let proc_entry_exit ((level : level), (body : exp)) : unit =
-    let attatched_body = Frame.proc_entry_exit1 (level.frame, body) in
+    let attatched_body = Frame.proc_entry_exit1 (level.frame, unNx body) in
     frag_list :=
-      Frame.PROC { body = unNx attatched_body; frame = level.frame }
-      :: !frag_list
+      Frame.PROC { body = attatched_body; frame = level.frame } :: !frag_list
 
   let string_exp (str : string) =
     let new_label = Temp.new_label () in
@@ -125,6 +124,57 @@ module Make = struct
            Tree.LABEL done_label;
          ])
 
+  let assign_exp (var_exp, init_exp) =
+    Nx (Tree.MOVE (unEx var_exp, unEx init_exp))
+
+  let record_exp (exps : exp list) =
+    let memory_for_record =
+      Tree.CALL
+        ( Tree.NAME (Temp.named_label "malloc"),
+          [ Tree.CONST (List.length exps * Frame.wordsize) ] )
+    and pointer_to_record = Temp.newTemp () in
+    let rec make_field_list (exps : exp list) (index : int) : Tree.stm list =
+      let memory_for_field =
+        Tree.MEM
+          (Tree.BINOP
+             ( Tree.PLUS,
+               Tree.TEMP pointer_to_record,
+               Tree.CONST (index * Frame.wordsize) ))
+      in
+      match exps with
+      | [] -> []
+      | exp :: next_exps ->
+          Tree.MOVE (memory_for_field, unEx exp)
+          :: make_field_list next_exps (index + 1)
+    in
+    Ex
+      (Tree.ESEQ
+         ( Tree.SEQ
+             ( Tree.MOVE (Tree.TEMP pointer_to_record, memory_for_record),
+               Tree.seq (make_field_list exps 0) ),
+           Tree.TEMP pointer_to_record ))
+
+  let call_exp (exps : exp list) (current_level : level) (dec_level : level) =
+    match dec_level.prev with
+    | None -> raise @@ TranslateError [ (None, "variation not found") ]
+    | Some parent_dec_level ->
+        let rec static_link_path (frame_pointer_pos : Tree.exp) (level : level)
+            =
+          if parent_dec_level.uniq == level.uniq then frame_pointer_pos
+          else
+            match level.prev with
+            | None -> raise @@ TranslateError [ (None, "variation not found") ]
+            | Some parent_level ->
+                let static_link_access = List.hd current_level.frame.formals in
+                let next_frame_pointer =
+                  Frame.exp static_link_access frame_pointer_pos
+                in
+                static_link_path next_frame_pointer parent_level
+        in
+        let static_link = static_link_path (Tree.TEMP Frame.fp) current_level in
+        Tree.CALL
+          (Tree.NAME dec_level.frame.label, static_link :: List.map unEx exps)
+
   let simple_var (((var_level, access), level) : access * level) : exp =
     let rec static_link_path frame_pointer_pos level =
       if var_level.uniq == level.uniq then
@@ -157,6 +207,7 @@ module Make = struct
     }
 
   let new_level prev_level new_label escapes =
+    (*静的リンクの追加*)
     let formals = true :: escapes in
     let new_frame = Frame.new_frame new_label formals in
     { prev = Some prev_level; frame = new_frame; uniq = ref () }
