@@ -1,5 +1,7 @@
 (library
- (name tiger_ocaml))
+ (name tiger_ocaml)
+ (libraries str)
+ )
 
 (env
  (dev
