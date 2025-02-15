@@ -1,2 +1,6 @@
-(test
- (name test_tiger_ocaml))
+(library
+ (name test_tiger_ocaml)
+ (inline_tests)
+ (libraries tiger_ocaml core)
+ (preprocess
+  (pps ppx_inline_test ppx_expect)))
