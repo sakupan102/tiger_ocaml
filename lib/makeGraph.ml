@@ -36,7 +36,12 @@ module MakeGraph : MakeGraph = struct
         | _ ->
             Graph.make_edge
               { from = List.nth nodes i; to_ = List.nth nodes (i + 1) }
-      done
+      done;
+      let last_idx = List.length nodes - 1 in
+      match List.nth instrs last_idx with
+      | Assem.OPER { jump = Some labels; _ } ->
+          List.iter (add_label (List.nth nodes last_idx)) labels
+      | _ -> ()
     and add_temp_to_table (instr : Assem.instr) (node : Graph.node) =
       match instr with
       | Assem.OPER { dst; src; _ } ->
