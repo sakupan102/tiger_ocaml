@@ -35,10 +35,11 @@ let create (name : string) : symbol =
 
 let name ((s, _) : symbol) : string = s
 
-module Table = Tablemap.Make (struct
-  type t = symbol
+module Table = Table.MakeITable (struct
+  type key = symbol
 
-  let compare (_, i0) (_, i1) = Int.compare i0 i1
+  let equal (_, i0) (_, i1) = i0 == i1
+  let hash (_, i0) = i0
 end)
 
 type 'a table = 'a Table.table
