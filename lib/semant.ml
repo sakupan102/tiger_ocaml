@@ -4,9 +4,9 @@ type venv = Env.env_entry Symbol.table
 type tenv = Types.ty Symbol.table
 type expty = { exp : Translate.exp; ty : Types.ty }
 
-exception SemantError of (Tiger.pos option * string) list
+exception SemantError of (Absyn.pos option * string) list
 
-let check_int ((ty : Types.ty), (pos : Tiger.pos)) : unit =
+let check_int ((ty : Types.ty), (pos : Absyn.pos)) : unit =
   match ty with
   | Types.Int -> ()
   | _ -> raise @@ SemantError [ (Some pos, "integer required") ]
@@ -202,7 +202,7 @@ and trans_var
       { exp = Translate.subscript_var (var, index); ty = Types.Nil }
 
 and set_type_content (tenv : tenv)
-    ((symbol, ty, pos) : Symbol.symbol * Absyn.ty * Tiger.pos) =
+    ((symbol, ty, pos) : Symbol.symbol * Absyn.ty * Absyn.pos) =
   let typ = trans_ty (tenv, ty) in
   match Symbol.look (tenv, symbol) with
   | Some (Types.Name (_, type_ref)) ->
@@ -211,7 +211,7 @@ and set_type_content (tenv : tenv)
   | _ -> raise @@ SemantError [ (Some pos, "types does not match") ]
 
 and set_type_header (tenv : tenv)
-    ((symbol, _, _) : Symbol.symbol * Absyn.ty * Tiger.pos) =
+    ((symbol, _, _) : Symbol.symbol * Absyn.ty * Absyn.pos) =
   Symbol.enter (tenv, symbol, Types.Name (symbol, ref None))
 
 and trans_fun ((venv, tenv) : venv * tenv)

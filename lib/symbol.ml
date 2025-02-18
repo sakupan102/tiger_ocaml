@@ -35,7 +35,7 @@ let create (name : string) : symbol =
 
 let name ((s, _) : symbol) : string = s
 
-module Table = Table.MakeITable (struct
+module Table = Table.Make (struct
   type key = symbol
 
   let equal (_, i0) (_, i1) = i0 == i1

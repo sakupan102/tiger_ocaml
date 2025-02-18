@@ -157,5 +157,5 @@ and next_trace (label_to_block : T.stm list Symbol.table)
   | _ -> next_trace label_to_block blocks
 
 let trace_schedule ((blocks : T.stm list list), finish) =
-  let label_to_block = List.fold_left enter_block Symbol.empty blocks in
+  let label_to_block = List.fold_left enter_block (Symbol.empty ()) blocks in
   next_trace label_to_block blocks @ [ T.LABEL finish ]
