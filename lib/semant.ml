@@ -144,7 +144,7 @@ let rec trans_exp
             decs (venv, tenv)
         in
         trans_exp ((venv', tenv'), level, body)
-        *)
+    | Absyn.VarExp (var, _) -> trans_var ((venv, tenv), level, var)
     | _ -> raise @@ SemantError [ (None, "not implemented") ]
   in
   trexp exp
@@ -208,7 +208,7 @@ and trans_var
       match Symbol.look (venv, sym) with
       | None -> raise @@ SemantError [ (Some pos, "variable does not defined") ]
       | Some (Env.VarEntry { access; ty; pos }) ->
-          { exp = Translate.simple_var (access, level); ty = Types.Nil }
+          { exp = Translate.simple_var (access, level); ty }
       | _ -> raise @@ SemantError [ (Some pos, "variable does not defined") ])
   | Absyn.SubscriptVar (var, exp, pos) ->
       let { exp = index } = trans_exp ((venv, tenv), level, exp)
