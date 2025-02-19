@@ -19,7 +19,7 @@ module Make = struct
   type level = { prev : level option; frame : Frame.frame; uniq : unit ref }
   type access = level * Frame.access
 
-  exception TranslateError of (Tiger.pos option * string) list
+  exception TranslateError of (Absyn.pos option * string) list
 
   type exp =
     | Ex of Tree.exp
@@ -123,6 +123,14 @@ module Make = struct
            Tree.CJUMP (Tree.NE, unEx cond, Tree.CONST 0, body_label, done_label);
            Tree.LABEL done_label;
          ])
+
+  let seq_exp (exps : exp list) : exp =
+    let length = List.length exps in
+    let exp_without_value, value_exp :: _ =
+      Core.List.split_n exps (length - 1)
+    in
+    let stms = List.map (fun exp -> unNx exp) exp_without_value in
+    Ex (Tree.ESEQ (Tree.seq stms, unEx value_exp))
 
   let assign_exp (var_exp, value_exp) =
     Nx (Tree.MOVE (unEx var_exp, unEx value_exp))
