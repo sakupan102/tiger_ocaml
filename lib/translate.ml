@@ -124,8 +124,8 @@ module Make = struct
            Tree.LABEL done_label;
          ])
 
-  let assign_exp (var_exp, init_exp) =
-    Nx (Tree.MOVE (unEx var_exp, unEx init_exp))
+  let assign_exp (var_exp, value_exp) =
+    Nx (Tree.MOVE (unEx var_exp, unEx value_exp))
 
   let record_exp (exps : exp list) =
     let memory_for_record =
