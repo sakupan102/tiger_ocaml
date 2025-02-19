@@ -104,8 +104,11 @@ let rec trans_exp
         *)
         | _ -> raise @@ SemantError [ (Some pos, "type does not defined") ])
     | Absyn.SeqExp exps ->
-        let exp_results = List.map trexp exps in
-        List.nth exp_results (List.length exp_results - 1)
+        let result_expty = List.map trexp exps in
+        let length = List.length result_expty in
+        let exps = List.map (fun expty -> expty.exp) result_expty in
+        let last_type = (List.nth result_expty (length - 1)).ty in
+        { exp = Translate.seq_exp exps; ty = last_type }
     | Absyn.IfExp (cond, then_exp, Some else_exp, pos) ->
         let { exp = translated_cond; ty = result_ty } = trexp cond
         and { exp = translated_then; ty = true_ty } = trexp then_exp
