@@ -3,10 +3,13 @@ module Translate = Translate.Make
 type ty_entry = Types.ty
 type access = Translate.access
 
+let int = Symbol.create "int"
+let string = Symbol.create "string"
+
 let base_tenv : ty_entry Symbol.table =
   let tenv = Symbol.empty () in
-  let tenv' = Symbol.enter (tenv, Symbol.create "int", Types.Int) in
-  let tenv'' = Symbol.enter (tenv', Symbol.create "string", Types.String) in
+  let tenv' = Symbol.enter (tenv, int, Types.Int) in
+  let tenv'' = Symbol.enter (tenv', string, Types.String) in
   tenv''
 
 (* Base value environment: *)
