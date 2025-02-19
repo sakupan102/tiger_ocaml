@@ -122,14 +122,25 @@ let rec trans_exp
         and { exp = body_exp; ty = _ } = trexp body in
         check_int (cond_ty, pos);
         { exp = Translate.while_exp (cond_exp, body_exp); ty = Types.Nil }
-        (*
-    | Absyn.LetExp (decs, body, pos) ->
+    | Absyn.AssignExp (var, exp, pos) ->
+        let { exp = var_exp; ty = var_type } =
+          trans_var ((venv, tenv), level, var)
+        and { exp = value_exp; ty = value_type } =
+          trans_exp ((venv, tenv), level, exp)
+        in
+        is_expected_type ((var_type, pos), value_type);
+        { exp = Translate.assign_exp (var_exp, value_exp); ty = value_type }
+    | Absyn.LetExp (decs, body, _) ->
         let venv', tenv' =
           List.fold_right
-            (fun dec (venv, tenv) -> trans_dec ((venv, tenv), level, dec))
+            (fun dec (venv, tenv) ->
+              let new_venv, new_tenv, _ =
+                trans_dec ((venv, tenv), level, dec)
+              in
+              (new_venv, new_tenv))
             decs (venv, tenv)
         in
-        trans_exp ((venv', tenv'), level, Absyn.SeqExp body)
+        trans_exp ((venv', tenv'), level, body)
         *)
     | _ -> raise @@ SemantError [ (None, "not implemented") ]
   in

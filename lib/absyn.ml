@@ -1,4 +1,4 @@
-type pos = Tiger.pos
+type pos = { pos_fname : string; pos_lnum : int; pos_bol : int; pos_cnum : int }
 and symbol = Symbol.symbol
 
 type var =
@@ -15,10 +15,10 @@ and exp =
   | OpExp of exp * oper * exp * pos (* fields               type *)
   | RecordExp of ((symbol * exp) list * symbol * pos)
   | SeqExp of exp list
-  | AssignExp of (var * exp)
+  | AssignExp of var * exp * pos
   | IfExp of exp * exp * exp option * pos
   | WhileExp of (exp * exp * pos) (* decs      body*)
-  | LetExp of dec list * exp list * pos
+  | LetExp of dec list * exp * pos
 (*
                        (* var    escape      lo       hi       body *)
            | ForExp of (symbol * bool ref * 'a exp * 'a exp * 'a exp) * 'a
