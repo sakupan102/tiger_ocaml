@@ -136,13 +136,13 @@ let rec trans_exp
         { exp = Translate.assign_exp (var_exp, value_exp); ty = value_type }
     | Absyn.LetExp (decs, body, _) ->
         let venv', tenv' =
-          List.fold_right
-            (fun dec (venv, tenv) ->
+          List.fold_left
+            (fun (venv, tenv) dec ->
               let new_venv, new_tenv, _ =
                 trans_dec ((venv, tenv), level, dec)
               in
               (new_venv, new_tenv))
-            decs (venv, tenv)
+            (venv, tenv) decs
         in
         trans_exp ((venv', tenv'), level, body)
     | Absyn.VarExp (var, _) -> trans_var ((venv, tenv), level, var)
