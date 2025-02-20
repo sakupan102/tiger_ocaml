@@ -27,9 +27,9 @@ type program = { prolog : string; body : Assem.instr list; epilog : string }
 
 type frame = {
   label : Temp.label;
-  formals : formal list;
-  locals : access list ref;
-  local_offset : int ref;
+  formals : formal list; (*args + static link*)
+  locals : access list ref; (*local variables*)
+  local_offset : int ref; (* offset from the base pointer *)
 }
 
 type frag =
@@ -61,6 +61,7 @@ let new_frame label escapes =
   (*
     offset = 0: old rbp
     offset = wordsize: return address
+    offset = 2 * wordsize: static link
   *)
   let formals = build_formals num_reg_params wordsize [] escapes in
   { label; locals = ref []; local_offset = ref 0; formals }
