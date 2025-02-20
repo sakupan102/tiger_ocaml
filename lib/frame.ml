@@ -36,12 +36,15 @@ type frag =
   | PROC of { body : Tree.stm; frame : frame }
   | STRING of Temp.label * string
 
-let exp (access : access) (Tree.TEMP frame_pointer) =
-  match access with
-  | InFrame offset ->
-      Tree.MEM
-        (Tree.BINOP (Tree.PLUS, Tree.TEMP frame_pointer, Tree.CONST offset))
-  | InReg tmp -> Tree.TEMP tmp
+let exp (access : access) frame_pointer =
+  match frame_pointer with
+  | Tree.ESEQ _ | Tree.CONST _ | Tree.NAME _ | Tree.BINOP _ | Tree.CALL _ ->
+      failwith "frame_pointer must be a register or a memory location"
+  | _ -> (
+      match access with
+      | InFrame offset ->
+          Tree.MEM (Tree.BINOP (Tree.PLUS, frame_pointer, Tree.CONST offset))
+      | InReg tmp -> Tree.TEMP tmp)
 
 let new_frame label escapes =
   let num_reg_params = 0 in
