@@ -12,15 +12,18 @@ let commute = function
   | _, T.CONST _ -> true
   | _ -> false
 
-let rec reorder = function
+let rec reorder : Tree.exp list -> Tree.stm * Tree.exp list = function
   | exp :: rest ->
-      let stms, exps = do_exp exp and stms', exps' = reorder rest in
-      (T.SEQ (stms, stms'), exps :: exps')
+      let stms, new_exp = do_exp exp and stms', exps' = reorder rest in
+      if commute (stms', new_exp) then (stms % stms', new_exp :: exps')
+      else
+        let temp = Temp.newTemp () in
+        (stms % T.MOVE (T.TEMP temp, new_exp) % stms', T.TEMP temp :: exps')
   | [] -> (T.EXP (T.CONST 0), [])
 
 and reorder_exp ((exps : T.exp list), build_fun) : T.stm * T.exp =
-  let stm, exps = reorder exps in
-  (stm, build_fun exps)
+  let stm, reordered_exp = reorder exps in
+  (stm, build_fun reordered_exp)
 
 and reorder_stm ((exps : T.exp list), build_fun) : T.stm =
   let stm, exps' = reorder exps in
@@ -51,11 +54,11 @@ and do_stm (stm : T.stm) =
 and do_exp (exp : T.exp) =
   match exp with
   | T.BINOP (op, left_exp, right_exp) ->
-      reorder_exp ([ right_exp; left_exp ], fun [ a; b ] -> T.BINOP (op, a, b))
+      reorder_exp ([ left_exp; right_exp ], fun [ a; b ] -> T.BINOP (op, a, b))
   | T.MEM exp -> reorder_exp ([ exp ], fun [ a ] -> T.MEM a)
-  | T.ESEQ (stm, exp) ->
-      let stm' = do_stm stm and stm'', exp' = do_exp exp in
-      (T.SEQ (stm', stm''), exp)
+  | T.ESEQ (stm, eseq_exp) ->
+      let stm' = do_stm stm and stm'', exp' = do_exp eseq_exp in
+      (T.SEQ (stm', stm''), exp')
   | T.CALL (fn, args) ->
       reorder_exp (fn :: args, fun (fn :: args) -> T.CALL (fn, args))
   | _ -> (T.EXP (T.CONST 0), exp)
@@ -63,7 +66,7 @@ and do_exp (exp : T.exp) =
 let linearize (stm0 : T.stm) : T.stm list =
   let rec linear = function
     | T.SEQ (stm, stms) -> stm :: linear stms
-    | _ -> [ stm0 ]
+    | stm -> [ stm ]
   in
   linear (do_stm stm0)
 
