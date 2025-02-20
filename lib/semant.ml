@@ -14,14 +14,15 @@ let check_int ((ty : Types.ty), (pos : Absyn.pos)) : unit =
 let rec actual_type (typ, pos) : Types.ty =
   match typ with
   | Types.Name (_, ty_option) -> (
-      match !ty_option with
-      | Some ty -> actual_type (ty, pos)
-      | None -> raise @@ SemantError [ (Some pos, "undefined type") ])
+      match !ty_option with Some ty -> actual_type (ty, pos) | None -> typ)
   | _ -> typ
 
 let is_expected_type ((ty, pos), expected) : unit =
-  if actual_type (ty, pos) = expected then ()
-  else raise @@ SemantError [ (Some pos, "type does not match") ]
+  match actual_type (ty, pos) with
+  | Types.Name _ -> raise @@ SemantError [ (Some pos, "type does not defined") ]
+  | ty ->
+      if ty = expected then ()
+      else raise @@ SemantError [ (Some pos, "type does not match") ]
 
 let trans_param ((tenv : tenv), (field : Absyn.field list)) :
     (Symbol.symbol * Types.ty) list =
