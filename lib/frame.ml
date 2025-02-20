@@ -64,7 +64,7 @@ let new_frame label escapes =
     offset = 2 * wordsize: static link
   *)
   let formals = build_formals num_reg_params wordsize [] escapes in
-  { label; locals = ref []; local_offset = ref 0; formals }
+  { label; locals = ref []; local_offset = ref ~-wordsize; formals }
 
 let alloc_local frame escape =
   let loc =
