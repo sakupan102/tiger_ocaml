@@ -3,7 +3,7 @@ type formal = location
 type access = location
 type register = string
 
-let wordsize = 4
+let wordsize = 8
 let registers = [ "rax"; "rbx"; "rcx"; "rdx" ]
 
 (*TODO: 引数の数を無制限にする*)
